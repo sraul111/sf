@@ -1,0 +1,16 @@
+# Backend
+backend/target/
+*.class
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# OS/editor
+.DS_Store
+*.log
+/.vs/ServiceForge1/CopilotIndices/18.7.1225.11805
+/.vs/slnx.sqlite
+/.vs/ServiceForge1.slnx/FileContentIndex/43ba70a2-7cc4-49db-ac6a-ba56a01eb2f5.vsidx
+/.vs/ServiceForge1.slnx/FileContentIndex/*.vsidx
