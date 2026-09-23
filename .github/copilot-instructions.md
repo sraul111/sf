@@ -8,9 +8,11 @@ Any "develop this feature: `<intent>`" request must go through the three-step pi
 
 Any "implement the fix described in `<rule-file>`" request (a rule file under `pipeline/*/rules/*.md`) routes instead to the standalone `bug-fix-agent`, defined in `pipeline/orchestration.md`'s "separate entry point" section — it writes its own code fix and its own tests and does not call the Developer or Tester agents.
 
+Any "design the architecture for `<source-file>`" or equivalent ADR/planning request routes to `adr-agent` and then `adr-review-agent`. The source file may have any filename; identify it by the path supplied by the user. Stop after the review for human approval; do not proceed directly into implementation.
+
 ## Role definitions
 
-The BA, Developer, and Tester roles are defined in full under `.claude/agents/*.md`. They were written in Claude Code's subagent format (a small YAML header, then the role body) but the content is plain markdown — read and follow them the same way you'd follow any instruction file. Reusable slash-command versions of the same three roles are in `.github/prompts/` if you'd rather invoke them that way.
+Canonical role definitions live under `.claude/agents/*.md`. GitHub Copilot workspace agents live under `.github/agents/`; the ADR wrappers delegate to the canonical role files so their behavior does not drift.
 
 ## Skills
 

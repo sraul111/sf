@@ -26,12 +26,14 @@ npm start                    # serves http://localhost:4200
 
 **"Implement the fix described in `<rule-file>`" is a separate standing instruction** for bugs that are already diagnosed and committed under `pipeline/*/rules/*.md`. This routes to the `bug-fix-agent` alone (see `pipeline/orchestration.md`), which is self-contained — it does not call, and is not called by, the BA/Developer/Tester pipeline.
 
+**"Design the architecture for `<source-file>`" is the architecture standing instruction.** The source file contains the requirements but may have any filename; it does not need to include `requirements` in its name. The request routes first to the generic `adr-agent`, then to the ServiceForge-specific `adr-review-agent`, and stops for human approval before implementation. Equivalent requests to create an ADR or implementation plan follow the same route.
+
 ## Where things live
 
 | What | Where |
 |---|---|
 | The orchestration pipeline (tool-agnostic, read this first) | `pipeline/orchestration.md` |
-| Agent role definitions (BA / Developer / Tester) | `.claude/agents/*.md` — plain markdown with a small YAML header for Claude Code; readable as-is by any tool |
+| Agent role definitions (BA / ADR / ADR review / Developer / Tester / Bug fix) | `.claude/agents/*.md` — plain markdown with a small YAML header for Claude Code; readable as-is by any tool |
 | Skills (reusable how-to knowledge) | `.claude/skills/*/SKILL.md` |
 | Feature specifications (one file per feature — see the [feature-spec convention](pipeline/features/feature-1-technician-availability.md)) | `pipeline/features/feature-N-<slug>.md` |
 | Decisions made while building a feature (what later features must remember) | `pipeline/decisions/feature-N-decisions.md` |

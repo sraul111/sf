@@ -34,9 +34,31 @@ That one line is the only input. Everything else below is how it gets turned int
 - **What it does:** writes and runs tests against the Definition of Done in the spec from step 1 — not against what the code happens to do, but against what it was supposed to do.
 - **Output:** test results. If they fail, the loop returns to step 2, not step 1 — the spec doesn't change because the code didn't meet it.
 
+## Architecture and planning pipeline
+
+Architecture work is a separate, reusable path between an approved requirements artifact and implementation. Trigger it with:
+
+> **"Design the architecture for `<source-file>`"**
+
+The source file contains the requirements but may have any filename; routing uses the path supplied by the caller, not a filename pattern. Equivalent requests such as "create an ADR" or "create an implementation plan" follow the same route when they name a source file.
+
+### 1 — ADR author (turns requirements into a design)
+
+- **Role definition:** `.claude/agents/adr-agent.md`
+- **What it does:** discovers the repository's constraints, evaluates credible options, and writes a traceable architecture decision plus a dependency-ordered implementation plan.
+- **Output:** `architecture-adr.md` and `implementation-plan.md` beside the source file.
+
+### 2 — ADR reviewer (challenges the design for ServiceForge)
+
+- **Role definition:** `.claude/agents/adr-review-agent.md`
+- **What it does:** checks the proposed design against ServiceForge's Java 17, Spring Boot 3, Angular, in-memory data model, active rules, prior decisions, and current implementation boundaries.
+- **Output:** `adr-review.md` beside the ADR, with an `Approved` or `Changes required` verdict and evidence-backed findings.
+
+The orchestrator must run these agents in order: `[requirements] -> adr-agent -> adr-review-agent -> [human approval]`. It must stop after review for a human decision and must not silently proceed into implementation. The generic ADR author is reusable; ServiceForge-specific constraints belong in the review agent.
+
 ## A separate entry point — fixing an already-diagnosed bug
 
-Not every change starts from "develop this feature." When a bug has already been diagnosed and committed as a rule file under `pipeline/*/rules/*.md` (constraint, root cause, verification criteria — see `pipeline/feature2/rules/no-overlap-booking.md` for the shape), the trigger is instead:
+Not every change starts from feature development or architecture design. When a bug has already been diagnosed and committed as a rule file under `pipeline/*/rules/*.md` (constraint, root cause, verification criteria — see `pipeline/feature2/rules/no-overlap-booking.md` for the shape), the trigger is instead:
 
 > **"Implement the fix described in `<rule-file-path>`"**
 
@@ -56,6 +78,6 @@ A human should look at the output of step 1 (the spec) before step 2 starts — 
 ## Running this in each tool
 
 - **Claude Code:** the three role files under `.claude/agents/` are real Claude Code subagents (they have the frontmatter Claude Code expects). Say "develop this feature: `<intent>`" and Claude Code should route through them in order, per this document.
-- **GitHub Copilot:** use the matching prompt files in `.github/prompts/` (`ba-agent.prompt.md`, `developer-agent.prompt.md`, `tester-agent.prompt.md`) as slash commands, in the order above, or paste this document into a Copilot Chat session as context.
+- **GitHub Copilot:** invoke the workspace agents under `.github/agents/`. The orchestrator routes feature, architecture, and bug-fix requests to the corresponding agents defined above.
 - **Codex / any `AGENTS.md`-reading CLI agent:** `AGENTS.md` already points here. Give the same "develop this feature" instruction; the agent should read the three role files under `.claude/agents/` as plain markdown (the YAML header is harmless to ignore) and follow the same three steps.
 - **Anyone without an agent tool:** the three role files are readable specs. Do the three steps yourself, in order.

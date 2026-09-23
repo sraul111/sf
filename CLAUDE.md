@@ -6,11 +6,14 @@ The above import brings in the tool-agnostic project rules. Everything below is 
 
 ## Subagents
 
-This repo defines three subagents under `.claude/agents/`, matching the roles in `pipeline/orchestration.md`:
+This repo defines focused subagents under `.claude/agents/`, matching the roles in `pipeline/orchestration.md`:
 
 - `ba-agent` — turns a feature intent into a committed spec under `pipeline/features/`.
 - `developer-agent` — implements a committed spec into working code, loading the relevant skills and rules.
 - `tester-agent` — writes and runs tests against a spec's Definition of Done.
+- `adr-agent` — generically turns any source file containing requirements into an ADR and implementation plan, regardless of filename.
+- `adr-review-agent` — reviews that design against ServiceForge's stack and project decisions.
+- `bug-fix-agent` — implements and verifies an already-diagnosed rule-file fix.
 
 Invoke them the way you'd invoke any Claude Code subagent, e.g.:
 
