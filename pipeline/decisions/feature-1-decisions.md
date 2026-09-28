@@ -10,8 +10,10 @@ Decisions made while building Feature 1 that later features may need to retrieve
 
 **Where it lives in code:** `backend/src/main/java/com/serviceforge/service/TechnicianAvailabilityService.java`, `TRAVEL_BUFFER_MINUTES` constant.
 
-## Decision: overlap detection compares exact start times, not intervals
+## Decision amendment: bookings use buffered interval conflict detection
 
-**What was decided (and should probably be reconsidered):** the current overlap check in `bookJob(...)` rejects a new booking only if its start time exactly matches an existing booking's start time. It does not check whether the two time ranges genuinely overlap.
+**What changed:** `bookJob(...)` now rejects a new job for the same technician when its time range overlaps any existing job's half-open `[startTime, endTime)` range, or when the gap before or after that job is less than the standard 45-minute travel buffer. The earlier exact-start-time-only behavior was a bug and has been fixed.
 
-**Why it matters:** this is a live bug, not a design choice anyone defended. It means two jobs with different-but-overlapping start times for the same technician are both silently accepted. Anything that assumes "a technician's booked slots never overlap" is currently assuming something the code doesn't guarantee.
+**Why it matters:** scheduling and later features can rely on bookings for one technician not overlapping and on a minimum 45-minute gap between jobs. A booking exactly 45 minutes away is allowed.
+
+**Where it is defined and verified:** see `pipeline/feature2/rules/no-overlap-booking.md` for the constraint and `backend/src/test/java/com/serviceforge/controller/TechnicianAvailabilityControllerTest.java` for overlap, buffer-conflict, and accepted-booking cases.

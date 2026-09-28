@@ -225,4 +225,36 @@ class TechnicianAvailabilityControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("conflicting job")));
     }
+
+    @Test
+    void invalidTimeRangeReturnsNotFound() throws Exception {
+        mockMvc.perform(post("/api/jobs")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "technicianId": 3,
+                                  "customerName": "Invalid Time Range",
+                                  "startTime": "2026-11-02T10:00:00",
+                                  "endTime": "2026-11-02T09:00:00"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("before its end time")));
+    }
+
+    @Test
+    void bookingForMissingTechnicianReturnsNotFound() throws Exception {
+        mockMvc.perform(post("/api/jobs")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "technicianId": 9999,
+                                  "customerName": "Missing Technician",
+                                  "startTime": "2026-11-03T10:00:00",
+                                  "endTime": "2026-11-03T11:00:00"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("No technician with id 9999")));
+    }
 }

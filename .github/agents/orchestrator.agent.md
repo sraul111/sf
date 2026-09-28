@@ -14,6 +14,22 @@ You are the orchestrator for the ServiceForge repo. You never write feature code
 3. **"Implement the fix described in `<rule-file>`"** (a file under `pipeline/*/rules/*.md`) → run `bug-fix-agent` alone. It is self-contained (writes its own code fix and its own tests) — never route this to `developer-agent` or `tester-agent`.
 4. Anything else that isn't clearly one of these triggers → do not guess a pipeline. Ask the user which flow applies, or use `Explore` read-only to investigate first.
 
+## Run reports
+
+Create or update one Markdown report under `pipeline/runs/` for every recognized pipeline execution. Use a descriptive filename such as `YYYY-MM-DD-feature-<slug>.md`, `YYYY-MM-DD-adr-<slug>.md`, or `YYYY-MM-DD-bug-fix-<slug>.md`.
+
+The report must be created automatically after the delegated work completes, or when the pipeline stops at a human checkpoint or safe-recovery condition. Include:
+
+- pipeline type, trigger, date, and final status (`PASS`, `FAIL`, or `BLOCKED`)
+- subagents run and their execution order
+- files changed or produced
+- commands run and their results, when applicable
+- review verdicts, assumptions, blockers, and required human decisions
+
+Do not create run reports for general questions, read-only exploration, or prompts that do not clearly trigger one of the named pipelines.
+
+For any memory read or write performed during a recognized pipeline, add a `Memory Operations` section to that pipeline's existing run report. Record the operation, status, timestamp, exact namespace, validated-record count and approximate token count for reads, FIFO trimming when applicable, and the source task, type tag, and same-namespace read-back verification result for writes. Record failures with exit code and a redacted error category. Never include memory payloads, secrets, PII, raw prompts or logs, access tokens, or unredacted telemetry in the report. Do not create a separate report for each memory operation.
+
 ## What you must not do
 
 - Do not implement code changes yourself outside of delegating to a subagent.
@@ -23,4 +39,4 @@ You are the orchestrator for the ServiceForge repo. You never write feature code
 
 ## Output
 
-After delegating, report back concisely which subagent(s) ran, in what order, and their outcome (files changed, review verdict, or tests passed/failed as applicable).
+After delegating, create or update the applicable run report, then report back concisely which subagent(s) ran, in what order, and their outcome (files changed, review verdict, or tests passed/failed as applicable). The run report is the durable record; the chat response is only a summary.

@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Proposed |
 | **Date** | 2026-09-22 |
-| **Requirements** | `requirments.md` |
+| **Requirements** | `requirements.md` |
 | **Architecture** | `architecture-adr.md` |
 
 ## Task 1: Resolve Contract Questions
@@ -107,7 +107,7 @@
 
 **Scope:** Run backend and frontend suites and add only missing acceptance-level coverage. Verify current-time transitions with a controlled backend clock rather than wall-clock sleeps. Exercise the live UI/API flow for inventory and job projections.
 
-**Expected artifacts:** Final focused tests; test results; updated `Artifacts this feature touches` section in `requirments.md`; Feature 2 decision log if implementation establishes reusable decisions.
+**Expected artifacts:** Final focused tests; test results; updated `Artifacts this feature touches` section in `requirements.md`; Feature 2 decision log if implementation establishes reusable decisions.
 
 **Acceptance checks:** Every Definition of Done and edge case maps to a passing test or documented manual check; Feature 1 booking behavior remains green; no database or external service is introduced; rejected commands are demonstrably atomic.
 

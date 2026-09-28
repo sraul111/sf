@@ -1,0 +1,174 @@
+AGENTS SDLC PIPELINE REVIEW COMMENTS - MR !4 B1/B2 Memory Pipeline
+Reviewer scope: Sujit Kumar Raul / ServiceForge, merge request !4 only.
+Note: These comments cover agent workflow, memory design, orchestration, rules, skills, audit evidence, and quality gates. Code-level comments are in CODE_REVIEW_COMMENTS.txt.
+
+Overall SDLC/pipeline summary
+- This MR is a meaningful step toward adding memory to the ServiceForge agentic workflow. The repo now has a B1 memory design, a B2 feature spec, a retention rule, a memory retrieval skill, test evidence, and an audit report.
+- The work shows good understanding that semantic memory already lives in instructions/rules and that episodic memory needs a separate store.
+- The main pipeline issue is that the design describes a fuller architecture than the implementation actually delivers. That is fine for an assignment slice, but the docs need to be more explicit about what is prototype, what is approved contract, and what is still future work.
+
+pipeline/feature2/memory-design.md
+Purpose: B1 memory architecture design.
+
+Architecture / correctness
+- Medium: The design is clear on semantic, procedural, episodic, and working memory tiers. That is a good framing.
+- Medium: The design says the write path is a non-blocking post-turn event hook, but this MR implements manual CLI scripts. That gap is okay, but it should be labelled as future work in the design or status changed from Proposed to Prototype Slice.
+- Medium: The design mentions hybrid recency/relevance ranking and summarization, but the implementation uses FIFO trimming only.
+  Recommendation: add a section called "Implemented in B2" and another called "Deferred" so reviewers do not have to infer the gap from the audit report.
+
+Security
+- Medium: The design talks about namespace isolation, but not about secrets in memory. Add a clear rule that credentials, tokens, customer data, and raw logs must never be retained.
+
+Workflow/orchestration
+- Medium: The design does not yet say exactly where in BA -> Developer -> Tester memory is read or written.
+  Recommendation: define read-before-decision and write-after-validated-decision points for each agent.
+
+Quality gates
+- High: The design should require automated tests and secret scanning before a memory rule/store change can merge.
+
+Testing/Observability
+- Medium: Good that an audit report exists. Add a standard run-report location for future memory pipeline executions.
+
+pipeline/features/feature-2-memory-pipeline.md
+Purpose: B2 feature spec for memory pipeline scripts.
+
+Architecture / correctness
+- High: The spec has an internal contract mismatch. It says over-budget reads must use consolidation or importance weighting, then later says the approved behavior is FIFO oldest-entry removal. The implementation and tests use FIFO.
+  Recommendation: update the Definition of Done and In Scope text to say FIFO is the approved B2 behavior, and leave summarization/importance weighting as future enhancement.
+- Medium: The spec says the read path accepts a namespace and retrieval query/context. The script accepts namespace through MEMORY_NAMESPACE only and does not accept a query/context.
+  Recommendation: either add the query argument or revise the spec to match the implemented CLI.
+- Low: The feature status says Approved / implemented. That is okay if this is the CLI slice only, but not okay if readers interpret it as the full memory architecture.
+
+Security
+- Medium: Add an explicit DoD item that no secrets or raw telemetry are stored in memory.
+
+Workflow/orchestration
+- Medium: The spec describes scripts but does not update the main orchestration with when agents should call read/write.
+
+Quality gates
+- Medium: Tester results are included, which is good. CI should enforce the same command.
+
+Testing/Observability
+- Low: The Tester results section is useful and should be kept.
+
+pipeline/feature2/rules/memory-retention-rule.md
+Purpose: policy for what agents can store in episodic memory.
+
+Architecture / correctness
+- Medium: The discard/retain categories are sensible and easy to understand.
+- Medium: The rule says over-budget memory must be summarized using hierarchical consolidation. Current read_memory.js drops FIFO instead. This is another contract mismatch.
+  Recommendation: update this rule to say B2 uses FIFO for now, or implement the summarization rule.
+
+Security
+- High: The rule does not explicitly ban secrets, credentials, tokens, customer PII, or private telemetry.
+  Recommendation: add those to the discard policy before agents start writing memory automatically.
+
+Workflow/orchestration
+- Medium: The rule says mandatory pre-storage filter, but the implementation allows any CLI caller to pass validated:true.
+  Recommendation: define which agent/classifier approves a memory before write_memory.js is called.
+
+Quality gates
+- Medium: Add examples of allowed and rejected memory records so future agents have less room to guess.
+
+Testing/Observability
+- Medium: The tests cover several rejected terms. Add positive and negative examples for secrets and PII.
+
+pipeline/feature2/skills/memory-retrieval-skill.md
+Purpose: operating instructions for using the memory CLI.
+
+Architecture / correctness
+- High: The file appears to contain two versions of the same skill back-to-back. There is a duplicated heading in the middle: "# Memory Retrieval Skill". This should be cleaned up before merge.
+  Recommendation: keep one consolidated version with both PowerShell and POSIX examples.
+- Medium: The skill correctly warns that the current implementation is not automatic prompt injection or relevance ranking. That is good and honest.
+- Medium: The skill says agents should use only returned validated records. It should also say agents must verify whether an empty result means no memory or records dropped by the token ceiling once the reader exposes that information.
+
+Security
+- Medium: Add a specific reminder not to write secrets, access tokens, user personal data, raw telemetry, or stack traces.
+
+Workflow/orchestration
+- Medium: The procedure is useful, but the skill is under pipeline/feature2/skills while canonical skills live under .claude/skills. Agents may miss it unless explicitly linked.
+  Recommendation: either move it under .claude/skills/memory-retrieval-skill/SKILL.md or reference it from AGENTS.md / CLAUDE.md / orchestration.
+
+Quality gates
+- Medium: Add a requirement that every memory write is followed by a read-back verification and the result is noted in a run report.
+
+Testing/Observability
+- Low: The examples are practical and useful.
+
+pipeline/feature2/reports/memory-audit-report.md
+Purpose: audit report comparing implementation to design/rule.
+
+Architecture / correctness
+- High: The report contains two audit reports in the same file. The second starts at another "# Memory Pipeline Audit Report" heading. This reads like two generated drafts were pasted together.
+  Recommendation: merge them into one report and remove duplicate sections.
+- Low: The report is refreshingly honest about what is implemented vs not implemented. Keep that tone.
+
+Security
+- Medium: The report mentions validation trust boundary, but should also call out secret retention risk directly.
+
+Workflow/orchestration
+- Medium: The audit says there is no automatic post-turn hook. That should feed back into memory-design.md and feature-2-memory-pipeline.md.
+
+Quality gates
+- Medium: The report states tests passed, but it is still manual evidence. Add CI so this stays true after changes.
+
+Testing/Observability
+- Low: The command and result are recorded clearly.
+
+AGENTS.md, pipeline/orchestration.md, .claude/agents/developer-agent.md, .github/prompts/developer-agent.prompt.md
+Purpose: update rule-discovery paths from top-level rules to feature-level rules.
+
+Workflow/orchestration
+- Medium: Updating rule discovery was necessary because rules now live under feature folders.
+- Medium: The new text only points to pipeline/*/rules/*.md. If a top-level pipeline/rules folder comes back later, those rules may be skipped.
+  Recommendation: say agents must read both pipeline/rules/*.md and pipeline/*/rules/*.md, or pick one official rule location.
+- Medium: AGENTS.md still calls these "Project-wide rules". A rule under pipeline/feature2/rules may be feature-specific.
+  Recommendation: split into "Project-wide rules" and "Feature-specific rules".
+
+Security
+- Medium: Add memory-specific safety to AGENTS.md: never store secrets, raw logs, private telemetry, or unverified assumptions.
+
+Quality gates
+- Medium: Add a repo-structure check to make sure docs and actual rule paths stay aligned.
+
+.github/outputs/reports/jira_agent_telemetry.json
+Purpose: raw agent telemetry evidence.
+
+Security / privacy
+- High: This raw telemetry should not be part of the source review unless it is explicitly required by the assignment. It includes user/workspace identifiers, prompts, timestamps, model families, and token counts.
+  Recommendation: remove it from the MR or replace it with a short redacted execution summary.
+
+Workflow/orchestration
+- Low: It does show iterative agent usage, but the audit report and feature spec already provide better evidence.
+
+Quality gates
+- Medium: Add a rule that telemetry files are not committed unless they are redacted and intentionally approved.
+
+CI/CD and quality gates
+- High: No GitLab CI update is included for the new memory tests.
+  Recommendation: add a job such as:
+  - cd pipeline/feature2/memory_pipeline
+  - node --test memory_pipeline.test.js
+- Medium: Add a markdown lint or at least a duplicate-heading/doc hygiene check. It would have caught the duplicated sections in the skill and audit report.
+- Medium: Add a secret scan because the new feature persists agent memory.
+
+Pipeline failure modes to address
+- Two agents writing memory at the same time can lose records.
+- Runtime memory writes can dirty committed files.
+- FIFO trimming can hide relevant memory without telling the caller.
+- Docs say summarization/ranking in some places and FIFO in others.
+- Agents may miss the memory retrieval skill because it is not in the canonical .claude/skills folder.
+- Raw telemetry can leak internal workflow details.
+- A caller can mark any payload validated:true without an independent classifier.
+
+Prioritized SDLC fixes
+1. Clean up duplicated sections in memory-retrieval-skill.md and memory-audit-report.md.
+2. Align the memory design, retention rule, and feature spec with the actual B2 contract: FIFO CLI prototype, not full summarization/ranking.
+3. Add CI for the memory tests.
+4. Add no-secrets/no-PII/no-raw-telemetry language to the retention rule and memory skill.
+5. Decide the official location for memory skill files and rule files, then update AGENTS.md and orchestration.
+6. Add a run-report convention for memory writes/reads.
+7. Document concurrency limits clearly before wiring this into automatic post-turn hooks.
+
+Final pipeline note
+- Good B1/B2 direction. The candidate has captured the right memory concepts and built a working CLI slice. Before merge, I would ask for cleanup and contract alignment so the next agent does not confuse the prototype with the full memory architecture.

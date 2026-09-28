@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Proposed |
 | **Date** | 2026-09-22 |
-| **Requirements** | `requirments.md` |
+| **Requirements** | `requirements.md` |
 
 ## Context
 

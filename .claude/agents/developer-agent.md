@@ -17,7 +17,7 @@ You are the build step of this repo's "develop this feature" pipeline (see `pipe
 - Any decision the spec names as a dependency, from `pipeline/decisions/`.
 - `.claude/skills/build-code-skill/SKILL.md` — this repo's stack conventions.
 - `.claude/skills/migration-safety-skill/SKILL.md` — if your change touches the data model.
-- Every rule file currently under `pipeline/rules/*.md`, if any exist.
+- Every rule file currently under `pipeline/*/rules/*.md`, if any exist.
 
 ## What you do
 
@@ -34,5 +34,5 @@ Working code, committed, plus the updated spec file's artifact list. You do not 
 
 - Does the implementation match the spec's "in scope" exactly, without absorbing "out of scope" items?
 - Does it follow `build-code-skill`'s stack conventions?
-- Does it respect every currently-active rule under `pipeline/rules/`?
+- Does it respect every currently-active rule under `pipeline/*/rules/`?
 - Can you explain, live, why you built it this way and not another way?

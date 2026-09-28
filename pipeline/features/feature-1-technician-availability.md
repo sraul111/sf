@@ -25,4 +25,4 @@ The Definition of Done above says overlapping bookings must be rejected. As ship
 - `backend/.../controller/TechnicianController.java`, `JobController.java`
 - `backend/.../model/Technician.java`, `Job.java`, `JobStatus.java`
 - `backend/.../data/MockDataStore.java`
-- No `pipeline/rules/*.md` yet — none has been needed until now
+- No `pipeline/*/rules/*.md` yet — none has been needed until now

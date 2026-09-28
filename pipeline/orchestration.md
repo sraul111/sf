@@ -10,6 +10,32 @@ Anyone — human or agent — can kick this off with a single instruction:
 
 That one line is the only input. Everything else below is how it gets turned into a shipped feature.
 
+## Run reports
+
+Every recognized pipeline execution produces a run report under `pipeline/runs/`. The orchestrator creates or updates this report automatically after delegated work completes, or when the pipeline stops at a human checkpoint or safe-recovery condition. Agents do not require the user to write the report manually.
+
+Use a descriptive Markdown filename such as `YYYY-MM-DD-feature-<slug>.md`, `YYYY-MM-DD-adr-<slug>.md`, or `YYYY-MM-DD-bug-fix-<slug>.md`. Each report records:
+
+- pipeline type, trigger, date, and final status (`PASS`, `FAIL`, or `BLOCKED`)
+- subagents run and their execution order
+- files changed or produced
+- commands run and their results, when applicable
+- review verdicts, assumptions, blockers, and required human decisions
+
+This convention applies to feature development, architecture and ADR review, and diagnosed bug-fix pipelines. It does not apply to general questions, read-only exploration, or prompts that do not clearly trigger a named pipeline.
+
+### Memory operation reporting
+
+When a recognized pipeline performs a memory read or write, record the operation in the same run report under a `Memory Operations` section. Do not create a separate report for each operation. For each operation, record:
+
+- operation (`read` or `write`), result status, and timestamp
+- the exact namespace used, without recording memory contents
+- for reads, the number of validated records returned and the approximate token count; note when FIFO trimming removed records
+- for writes, the source task, type tag, and whether a same-namespace read-back verification succeeded
+- rejected writes, failed reads, exit codes, and the redacted error category
+
+Run reports must not contain secrets, PII, raw prompts, raw logs, access tokens, or unredacted telemetry. Memory content may be summarized only as a redacted outcome; the report should never reproduce the payload.
+
 ## The three steps
 
 ### 1 — BA (turns intent into a spec)
@@ -24,7 +50,7 @@ That one line is the only input. Everything else below is how it gets turned int
 
 - **Role definition:** `.claude/agents/developer-agent.md`
 - **Skills it loads:** `.claude/skills/build-code-skill/SKILL.md` (stack conventions) and, if the change touches the data model, `.claude/skills/migration-safety-skill/SKILL.md`.
-- **Rules it must follow:** everything under `pipeline/rules/*.md` that exists at the time (there are none yet — the first one gets written the first time a shipped bug needs a standing rule against recurring).
+- **Rules it must follow:** everything under `pipeline/**/rules/*.md` that exists at the time, including rules located in feature-specific directories.
 - **What it does:** implements the spec from step 1, in the backend and/or frontend as the spec requires, without expanding scope beyond what the spec says.
 - **Output:** working code, committed.
 
@@ -66,6 +92,8 @@ Not every change starts from feature development or architecture design. When a 
 - **Skill it loads:** `.claude/skills/bug-fix-skill/SKILL.md` (and `build-code-skill` / `migration-safety-skill` as needed)
 - **What it does:** this agent is self-contained — it writes the code fix *and* writes and runs its own tests against the rule's Verification criteria. It does not call, and is not called by, the BA/Developer/Tester pipeline above.
 - **Output:** a verified code fix, its own tests, and an updated "Artifacts this rule touches" section on the rule file.
+
+The orchestrator also records the pipeline execution in the applicable `pipeline/runs/` report.
 
 ## Safe recovery
 

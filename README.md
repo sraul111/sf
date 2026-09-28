@@ -24,6 +24,26 @@ npm start
 ```
 Runs on `http://localhost:4200` and calls the backend above.
 
+## Verification commands
+
+```bash
+# Backend: run the Java test suite
+cd backend
+mvn test
+
+# Frontend: install dependencies and run the Angular build
+cd frontend
+npm install
+npm run build
+```
+
+When frontend tests are added to the Angular app, the project should use:
+
+```bash
+cd frontend
+npm test
+```
+
 ## For anyone directing an AI coding agent in this repo
 
 Start at **[`AGENTS.md`](AGENTS.md)**. It's the entry point for Claude Code, GitHub Copilot, Codex, or any equivalent tool, and it points to everything else: the orchestration pipeline, the agent role definitions, the skills, and the feature specs.

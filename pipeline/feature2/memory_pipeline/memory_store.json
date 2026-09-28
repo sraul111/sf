@@ -1,0 +1,12 @@
+[
+  {
+    "timestamp": "2026-09-22T00:00:00.000Z",
+    "source_task": "pipeline/decisions/feature-1-decisions.md",
+    "type_tag": "[FACT]",
+    "payload": {
+      "namespace": "ServiceForge:feature2-parts:dev",
+      "validated": true,
+      "content": "The standard travel buffer per job is 45 minutes."
+    }
+  }
+]
