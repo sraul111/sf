@@ -26,6 +26,11 @@ public class TechnicianAvailabilityService {
     public List<Job> getJobsForTechnician(Long technicianId) { return dataStore.getJobsForTechnician(technicianId); }
 
     public Job bookJob(Long technicianId, String customerName, LocalDateTime startTime, LocalDateTime endTime) {
+        return bookJob(technicianId, customerName, startTime, endTime, null);
+    }
+
+    public Job bookJob(Long technicianId, String customerName, LocalDateTime startTime, LocalDateTime endTime,
+                       String requiredSkill) {
         Technician technician = dataStore.findTechnician(technicianId)
                 .orElseThrow(() -> new IllegalArgumentException("No technician with id " + technicianId));
         if (!startTime.isBefore(endTime)) {
@@ -41,7 +46,7 @@ public class TechnicianAvailabilityService {
         }
 
         return dataStore.save(new Job(dataStore.nextJobId(), technicianId, customerName,
-                startTime, endTime, JobStatus.SCHEDULED));
+                startTime, endTime, JobStatus.SCHEDULED, requiredSkill));
     }
 
 }

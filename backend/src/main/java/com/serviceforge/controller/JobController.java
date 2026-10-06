@@ -25,7 +25,7 @@ public class JobController {
     public ResponseEntity<?> bookJob(@Valid @RequestBody BookJobRequest request) {
         try {
             Job job = availabilityService.bookJob(request.getTechnicianId(), request.getCustomerName(),
-                    request.getStartTime(), request.getEndTime());
+                    request.getStartTime(), request.getEndTime(), request.getRequiredSkill());
             return ResponseEntity.status(201).body(job);
         } catch (IllegalArgumentException exception) {
             return ResponseEntity.status(404).body(new ApiError(exception.getMessage()));

@@ -7,6 +7,7 @@ export interface Job {
   startTime: string;
   endTime: string;
   status: JobStatus;
+  requiredSkill?: string | null;
 }
 
 export interface BookJobRequest {
@@ -14,4 +15,5 @@ export interface BookJobRequest {
   customerName: string;
   startTime: string;
   endTime: string;
+  requiredSkill?: string | null;
 }

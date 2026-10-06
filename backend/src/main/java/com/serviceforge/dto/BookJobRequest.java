@@ -19,6 +19,8 @@ public class BookJobRequest {
     @NotNull
     private LocalDateTime endTime;
 
+    private String requiredSkill;
+
     public Long getTechnicianId() { return technicianId; }
     public void setTechnicianId(Long technicianId) { this.technicianId = technicianId; }
     public String getCustomerName() { return customerName; }
@@ -27,4 +29,6 @@ public class BookJobRequest {
     public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+    public String getRequiredSkill() { return requiredSkill; }
+    public void setRequiredSkill(String requiredSkill) { this.requiredSkill = requiredSkill; }
 }
