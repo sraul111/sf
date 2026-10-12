@@ -24,6 +24,23 @@ class MockDataStoreFeature3Test {
     @Autowired
     private MockDataStore dataStore;
 
+        @Test
+        void ac1FreshStoreSeedsExactlyFourPartsInIdOrderWithExpectedCatalogValues() {
+        MockDataStore freshStore = new MockDataStore();
+        freshStore.seed();
+
+        List<Part> parts = freshStore.getAllParts();
+        assertEquals(4, parts.size());
+        assertEquals(List.of(1L, 2L, 3L, 4L), parts.stream().map(Part::getId).collect(Collectors.toList()));
+        assertEquals(List.of("CMP-CLUTCH", "FLT-16", "BRK-20A", "VLV-BALL-075"),
+            parts.stream().map(Part::getSku).collect(Collectors.toList()));
+        assertEquals(List.of("AC Compressor Clutch", "16x25x1 Air Filter", "20A Single-Pole Circuit Breaker",
+                "3/4in Brass Ball Valve"),
+            parts.stream().map(Part::getName).collect(Collectors.toList()));
+        assertEquals(List.of(3, 10, 5, 3),
+            parts.stream().map(Part::getTotalQuantity).collect(Collectors.toList()));
+        }
+
     // DoD 4
     @Test
     void seededTechniciansHaveExactSkillsAndUnchangedIdentity() {
