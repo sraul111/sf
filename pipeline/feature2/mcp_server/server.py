@@ -105,13 +105,85 @@ def parse_iso_datetime(dt_str: str) -> datetime:
     normalized = dt_str.replace("Z", "+00:00")
     dt = datetime.fromisoformat(normalized)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    else:
-        dt = dt.astimezone(timezone.utc)
+        raise ValueError("Datetime must include a timezone")
+    dt = dt.astimezone(timezone.utc)
     return dt
 
 
+def validate_tool_args(tool: str, args: dict) -> bool:
+    schemas = {
+        "get_technician_availability": ({"technicianId", "jobStart", "jobEnd"}, {"require_no_conflict"}),
+        "get_part_stock": ({"sku"}, {"windowStart", "windowEnd", "include_peak"}),
+        "reserve_part_for_job": ({"jobId", "sku", "quantity"}, {"session_brief_ref"}),
+    }
+    required, optional = schemas[tool]
+    allowed = required | optional
+
+    unexpected = next((key for key in args if key not in allowed), None)
+    if unexpected is not None:
+        emit_error(400, "invalid_input", f"Unexpected argument: {unexpected}", {"field": unexpected})
+        return False
+
+    missing = required - args.keys()
+    if missing:
+        field = next(iter(sorted(missing)))
+        messages = {
+            "jobStart": "jobStart is required",
+            "jobEnd": "jobEnd is required",
+            "sku": "sku must be a non-empty string",
+            "quantity": "Quantity must be a positive integer",
+        }
+        if field in {"technicianId", "jobId"}:
+            message = f"{field} must be an integer >= 1"
+        else:
+            message = messages[field]
+        emit_error(400, "invalid_input", message, {"field": field})
+        return False
+
+    for field in ("technicianId", "jobId"):
+        if field in args and (type(args[field]) is not int or args[field] < 1):
+            emit_error(400, "invalid_input", f"{field} must be an integer >= 1", {"field": field})
+            return False
+
+    if "quantity" in args and (type(args["quantity"]) is not int or args["quantity"] < 1):
+        emit_error(400, "invalid_input", "Quantity must be a positive integer", {"field": "quantity"})
+        return False
+
+    if "sku" in args and (not isinstance(args["sku"], str) or not args["sku"].strip()):
+        emit_error(400, "invalid_input", "sku must be a non-empty string", {"field": "sku"})
+        return False
+
+    datetime_fields = {
+        "jobStart": "Invalid datetime format for jobStart",
+        "jobEnd": "Invalid datetime format for jobEnd",
+        "windowStart": "Invalid windowStart datetime",
+        "windowEnd": "Invalid windowEnd datetime",
+    }
+    for field, message in datetime_fields.items():
+        if field not in args:
+            continue
+        try:
+            parse_iso_datetime(args[field])
+        except (TypeError, ValueError, OverflowError):
+            emit_error(400, "invalid_input", f"{message}: {args[field]}", {"field": field})
+            return False
+
+    for field in ("require_no_conflict", "include_peak"):
+        if field in args and type(args[field]) is not bool:
+            emit_error(400, "invalid_input", f"{field} must be a boolean", {"field": field})
+            return False
+
+    if "session_brief_ref" in args and not isinstance(args["session_brief_ref"], str):
+        emit_error(400, "invalid_input", "session_brief_ref must be a string", {"field": "session_brief_ref"})
+        return False
+
+    return True
+
+
 def handle_get_technician_availability(args: dict, meta: dict):
+    if not validate_tool_args("get_technician_availability", args):
+        return
+
     technician_id = args.get("technicianId")
     if technician_id is None or not isinstance(technician_id, int) or technician_id < 1:
         emit_error(400, "invalid_input", "technicianId must be an integer >= 1", {"field": "technicianId"})
@@ -215,6 +287,9 @@ def handle_get_technician_availability(args: dict, meta: dict):
 
 
 def handle_get_part_stock(args: dict, meta: dict):
+    if not validate_tool_args("get_part_stock", args):
+        return
+
     sku = args.get("sku")
     if not sku or not isinstance(sku, str) or not sku.strip():
         emit_error(400, "invalid_input", "sku must be a non-empty string", {"field": "sku"})
@@ -273,6 +348,9 @@ def handle_get_part_stock(args: dict, meta: dict):
 
 
 def handle_reserve_part_for_job(args: dict, meta: dict):
+    if not validate_tool_args("reserve_part_for_job", args):
+        return
+
     job_id = args.get("jobId")
     if job_id is None or not isinstance(job_id, int) or job_id < 1:
         emit_error(400, "invalid_input", "jobId must be an integer >= 1", {"field": "jobId"})

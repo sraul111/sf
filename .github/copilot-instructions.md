@@ -4,7 +4,7 @@ Read `AGENTS.md` at the repo root first — it is the tool-agnostic entry point 
 
 ## The pipeline
 
-Any "develop this feature: `<intent>`" request must go through the three-step pipeline in `pipeline/orchestration.md` (BA → Developer → Tester). Do not jump straight to writing code for a new feature.
+Any "develop this feature: `<intent>`" request must go through the four-step pipeline in `pipeline/orchestration.md` (BA → Developer → Tester → Reviewer). After successful tests, the orchestrator must directly invoke the `review-agent`; the tester must not auto-delegate or invoke it. Do not jump straight to writing code for a new feature.
 
 Any "implement the fix described in `<rule-file>`" request (a rule file under `pipeline/*/rules/*.md`) routes instead to the standalone `bug-fix-agent`, defined in `pipeline/orchestration.md`'s "separate entry point" section — it writes its own code fix and its own tests and does not call the Developer or Tester agents.
 
@@ -13,6 +13,10 @@ Any "design the architecture for `<source-file>`" or equivalent ADR/planning req
 ## Role definitions
 
 Canonical role definitions live under `.claude/agents/*.md`. GitHub Copilot workspace agents live under `.github/agents/`; the ADR wrappers delegate to the canonical role files so their behavior does not drift.
+
+## Pre-merge code review
+
+Before shipping any code, require `review-agent` to review it against the canonical strict 5-area checklist in `.claude/rules/review-checklist-rule.md`. The orchestrator invokes the Copilot workspace agent in `.github/agents/review-agent.agent.md`; `.github/prompts/review-agent.prompt.md` is also available as a prompt wrapper for the canonical role in `.claude/agents/review-agent.md`. The full checklist is maintained only in the canonical rule.
 
 ## Skills
 

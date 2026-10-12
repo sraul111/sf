@@ -36,7 +36,7 @@ When a recognized pipeline performs a memory read or write, record the operation
 
 Run reports must not contain secrets, PII, raw prompts, raw logs, access tokens, or unredacted telemetry. Memory content may be summarized only as a redacted outcome; the report should never reproduce the payload.
 
-## The three steps
+## The four steps
 
 ### 1 — BA (turns intent into a spec)
 
@@ -59,6 +59,15 @@ Run reports must not contain secrets, PII, raw prompts, raw logs, access tokens,
 - **Role definition:** `.claude/agents/tester-agent.md`
 - **What it does:** writes and runs tests against the Definition of Done in the spec from step 1 — not against what the code happens to do, but against what it was supposed to do.
 - **Output:** test results. If they fail, the loop returns to step 2, not step 1 — the spec doesn't change because the code didn't meet it.
+
+### 4 — Reviewer (reviews the completed changes before shipping)
+
+- **Role definition:** `.claude/agents/review-agent.md` (GitHub Copilot workspace agent: `.github/agents/review-agent.agent.md`; reusable prompt: `.github/prompts/review-agent.prompt.md`)
+- **What it does:** reviews the exact proposed changes against the canonical checklist in `.claude/rules/review-checklist-rule.md`, including applicable acceptance criteria, quality, security, committed rules, design alignment, and release gates.
+- **Handoff:** only after `tester-agent` completes its tests successfully, the orchestrator explicitly invokes `review-agent`. The orchestrator owns this handoff; `tester-agent` must not auto-delegate, invoke, or otherwise trigger the review stage.
+- **Output:** a checklist-backed Ship or No-Ship verdict. A failed test does not proceed to review; return to step 2 to address the implementation and rerun testing. A No-Ship review blocks shipping until findings are resolved and reviewed again.
+
+The orchestrator must run feature development in this order: `[ba-agent] -> [human spec checkpoint] -> developer-agent -> tester-agent -> review-agent`. It must explicitly invoke `review-agent` itself after successful tests; do not treat review as part of the tester's work or allow the tester to delegate it.
 
 ## Architecture and planning pipeline
 
@@ -105,7 +114,7 @@ A human should look at the output of step 1 (the spec) before step 2 starts — 
 
 ## Running this in each tool
 
-- **Claude Code:** the three role files under `.claude/agents/` are real Claude Code subagents (they have the frontmatter Claude Code expects). Say "develop this feature: `<intent>`" and Claude Code should route through them in order, per this document.
-- **GitHub Copilot:** invoke the workspace agents under `.github/agents/`. The orchestrator routes feature, architecture, and bug-fix requests to the corresponding agents defined above.
-- **Codex / any `AGENTS.md`-reading CLI agent:** `AGENTS.md` already points here. Give the same "develop this feature" instruction; the agent should read the three role files under `.claude/agents/` as plain markdown (the YAML header is harmless to ignore) and follow the same three steps.
-- **Anyone without an agent tool:** the three role files are readable specs. Do the three steps yourself, in order.
+- **Claude Code:** the role files under `.claude/agents/` are real Claude Code subagents (they have the frontmatter Claude Code expects). Say "develop this feature: `<intent>`" and Claude Code should route through them in order, per this document.
+- **GitHub Copilot:** invoke the workspace agents under `.github/agents/`. The orchestrator routes feature, architecture, and bug-fix requests to the corresponding agents defined above, and directly invokes `review-agent` after successful feature tests.
+- **Codex / any `AGENTS.md`-reading CLI agent:** `AGENTS.md` already points here. Give the same "develop this feature" instruction; the agent should read the role files under `.claude/agents/` as plain markdown (the YAML header is harmless to ignore) and follow the four steps.
+- **Anyone without an agent tool:** the role files are readable specs. Do the four steps yourself, in order.

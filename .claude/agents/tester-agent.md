@@ -18,6 +18,8 @@ You are the verification step of this repo's "develop this feature" pipeline (se
 
 ## What you do
 
+Always read the `test-plan.md` located in the active feature's directory before writing tests.
+
 1. Read the spec's Definition of Done as a literal checklist. Write one test per checklist item.
 2. Run the tests. If any fail, report which Definition-of-Done item failed and why — do not silently soften the check to make it pass.
 3. If the Definition of Done is too vague to test (e.g. "works correctly"), say so explicitly rather than inventing your own interpretation of what "correctly" means.

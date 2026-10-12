@@ -14,13 +14,18 @@ This repo defines focused subagents under `.claude/agents/`, matching the roles 
 - `adr-agent` — generically turns any source file containing requirements into an ADR and implementation plan, regardless of filename.
 - `adr-review-agent` — reviews that design against ServiceForge's stack and project decisions.
 - `bug-fix-agent` — implements and verifies an already-diagnosed rule-file fix.
+- `review-agent` — reviews proposed changes against `.claude/rules/review-checklist-rule.md` before shipping.
+
+## Pre-merge code review
+
+Before shipping any code, require `review-agent` to review it against the strict 5-area checklist in `.claude/rules/review-checklist-rule.md`.
 
 Invoke them the way you'd invoke any Claude Code subagent, e.g.:
 
 ```
 "Develop this feature: <intent>" 
-→ Claude Code should route this through ba-agent, then developer-agent, then tester-agent,
-  per pipeline/orchestration.md — not write code directly.
+→ Claude Code should route this through ba-agent, developer-agent, and tester-agent, then
+    have the orchestrator invoke review-agent after successful tests, per pipeline/orchestration.md.
 ```
 
 ## Skills
