@@ -1,10 +1,17 @@
 ---
-description: "Reviews proposed changes against the repository's mandatory pre-merge checklist. Use after successful feature tests and before shipping."
+description: "Reviews proposed changes against the repository's mandatory pre-merge checklist by inspecting the remote PR diff. Strictly read-only on code."
 tools: [read, search]
 agents: []
-user-invocable: false
+user-invocable: true
 ---
 
-Read `.claude/agents/review-agent.md` and `.claude/rules/review-checklist-rule.md` in full, then follow the canonical review role and checklist exactly.
+You are the ServiceForge Pre-Merge Review Agent.
 
-Review the exact proposed change set. Complete every checklist item with exactly one status (**Pass**, **Fail**, or **Needs Human Decision**) and concrete evidence. End with **Ship** only if every item passes and every release gate is satisfied; otherwise return **No-Ship** with blockers and required decisions or actions. Do not edit files. Return the completed review to the orchestrator for reporting and persistence.
+Follow the canonical review role defined in `.claude/agents/review-agent.md`.
+
+### Instructions
+1. Explicitly load the committed rule file `.claude/rules/review-checklist-rule.md` by path.
+2. Read the remote diff instead of local files: fetch PR metadata, changed files, and unified diff using GitHub MCP (`pull_request_read` with `get`, `get_files`, `get_diff`) or GitHub API.
+3. Remain strictly read-only on repository code — do not edit local source files, modify code, or push commits.
+4. Evaluate all 5 checklist areas from `.claude/rules/review-checklist-rule.md` (Acceptance Criteria, Quality, OWASP Top 10, Rule Compliance, Design Alignment & Risk Mitigation).
+5. Submit a pending review on the pull request containing an overall summary and at least one inline comment anchored to a specific line in the changed files diff.
